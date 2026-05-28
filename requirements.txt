@@ -1,0 +1,16 @@
+pandas
+numpy
+scikit-learn
+xgboost
+lightgbm
+shap
+optuna
+prophet
+statsmodels
+pyarrow
+streamlit
+matplotlib
+seaborn
+requests
+openpyxl
+joblib
