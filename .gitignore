@@ -1,0 +1,17 @@
+data/raw/
+*.parquet
+*.csv
+*.zip
+*.gz
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
