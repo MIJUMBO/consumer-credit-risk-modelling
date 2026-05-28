@@ -1,6 +1,6 @@
 # Consumer Credit Risk Modelling - Loan Default Prediction with Canadian Macroeconomic Stress Testing for Credit Union Decision Support
 
-End-to-end machine learning project for predicting consumer loan default risk using Lending Club and with a Canadian macroeconomic overlay and an IFRS 9 expected-credit-loss (ECL) framework.
+End-to-end credit risk modeling project using Lending Club data, Canadian macroeconomic indicators, and an IFRS 9 expected credit loss (ECL) framework to predict consumer loan defaults.
 
 ## Overview
 - Predicts loan default using origination-time borrower features only (no leakage).
