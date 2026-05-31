@@ -12,10 +12,9 @@ End-to-end credit risk modeling project using Lending Club data, Canadian macroe
 |---|---|
 | 01_data_preparation | Load, clean, target-label policy, leakage audit |
 | 02_eda_loans_macros | Exploratory analysis of loans and macro series |
-| 03_feature_engineering | Build origination-time feature matrix |
-| 04_preprocessing | Encoding, scaling, train/validation/test split |
-| 05_modeling | Logistic regression, XGBoost, LightGBM |
-| 06_documentation | Results, SHAP attribution, ECL framework |
+| 03_feature_engineering_preprocessing | Build origination-time feature matrix, Encoding, scaling, train/validation/test split |
+| 04_modeling | Logistic regression, XGBoost, LightGBM |
+| 05_documentation | Results, SHAP attribution, ECL framework |
 
 ## Key EDA findings
 - FICO score is the strongest protective feature; DTI is the strongest risk feature.
@@ -25,9 +24,10 @@ End-to-end credit risk modeling project using Lending Club data, Canadian macroe
 
 ## Project structure
 ```
-data/        raw (gitignored) + processed files
+data/        raw  + processed files
 notebooks/   01-06 pipeline
 report/      figures and outputs
+models/
 ```
 
 ## Setup
