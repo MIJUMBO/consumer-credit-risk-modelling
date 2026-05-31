@@ -1,0 +1,15 @@
+loan_to_income
+dti_band
+fico_band
+credit_util_band
+employment_years
+short_tenure_flag
+vintage_year
+vintage_quarter
+open_acc_band
+delinq_flag
+pub_rec_flag
+purpose_risk_tier
+loan_amnt
+annual_inc
+home_ownership
