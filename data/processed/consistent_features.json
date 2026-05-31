@@ -29,7 +29,9 @@
     "delinq_amnt",
     "hardship_flag",
     "disbursement_method",
-    "debt_settlement_flag"
+    "debt_settlement_flag",
+    "vintage_year",
+    "vintage_quarter"
   ],
   "model_excluded": [
     "grade",
@@ -60,5 +62,8 @@
     "title",
     "zip_code"
   ],
-  "analyst_overrides": {}
+  "analyst_overrides": {
+    "vintage_year": "Cohort year extracted directly from issue_d. Structural time dimension for vintage effects, not a macro covariate. Raw issue_d excluded \u2014 only this controlled feature enters the model.",
+    "vintage_quarter": "Cohort quarter extracted directly from issue_d. Same justification as vintage_year."
+  }
 }
