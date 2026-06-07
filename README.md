@@ -15,7 +15,8 @@ End-to-end credit risk modeling project using Lending Club data, Canadian macroe
 | 03_feature_engineering_preprocessing | Build origination-time feature matrix, Encoding, scaling, train/validation/test split |
 | 04_modeling | Logistic regression, XGBoost, LightGBM |
 | 05_model_explainability | Feature importance, SHAP Analysis (Global), Business Insights |
-| 05_documentation | ECL framwork, Project Overview, Business Recommendations |
+| 06_stress-testing_and_ecl | Macro forecasting & scenario, IFRS 9 ECL framework, Stress overlay  |
+| 07_documentation | ECL framwork, Project Overview, Business Recommendations |
 
 ## Key EDA findings
 - FICO score is the strongest protective feature; DTI is the strongest risk feature.
