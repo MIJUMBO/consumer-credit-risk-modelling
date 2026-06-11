@@ -36,6 +36,11 @@ models/
 ```
 pip install -r requirements.txt
 ```
-
+  
 ## Data
-LendingClub loan data and a Canadian macro panel (Statistics Canada, Bank of Canada). Large data files are gitignored and not stored in the repo.
+LendingClub loan data and a Canadian macro panel (Statistics Canada, Bank of Canada). 
+Processed datasets/Large data files (~180 MB of parquet files) are excluded from this repo.
+To regenerate them, run notebooks NB01–NB03 in order:
+- 01_data_preparation ingests the raw LendingClub data
+- 02_eda_loans_macros builds the Canadian macro panel (Bank of Canada + StatsCan)
+- 03_feature_engineering_preprocessing engineers features and writes train/val/test splits to data/processed/
