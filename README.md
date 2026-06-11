@@ -27,7 +27,7 @@ End-to-end credit risk modeling project using Lending Club data, Canadian macroe
 ## Project structure
 ```
 data/        raw  + processed files
-notebooks/   01-06 pipeline
+notebooks/   01-07 pipeline
 report/      figures and outputs
 models/
 ```
