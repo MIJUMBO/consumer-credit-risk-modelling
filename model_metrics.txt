@@ -1,0 +1,122 @@
+==============================================================================
+MODEL METRICS  —  Consumer Credit Risk Modelling (Springboard DSC Capstone 3)
+Michael Ikechukwu Jumbo  |  June 2026
+Repo: github.com/MIJUMBO/consumer-credit-risk-modelling
+==============================================================================
+
+1. DATA
+------------------------------------------------------------------------------
+Borrower data (Layer 1)  : LendingClub accepted loans 2007–2018Q4
+Raw                      : 2,260,701 loans x 151 columns
+Resolved (modelled)      : 1,345,350 loans  (Fully Paid / Charged Off / Default)
+Overall default rate     : 19.96%  (~1:4 class imbalance)
+Dev sample               : 100,000 loans (stratified on issue_year x default_flag)
+Production sample        : 500,000 loans
+Macro panel (Layer 2)    : 318 months x 6 cols, Jan 2000–Jun 2026, zero nulls
+                           (BoC overnight rate V39079; StatCan 14-10-0287,
+                            18-10-0004, 11-10-0065, insolvencies v41690973)
+Architecture rule        : macro panel NEVER row-joined to loans (scenario use only)
+
+2. FEATURES  (15 origination-time predictors, one engineer() function)
+------------------------------------------------------------------------------
+Affordability   : loan_to_income, dti, loan_amnt, log_annual_inc (log + p99 cap)
+Credit quality  : fico_orig, revol_util (median-imputed), open_acc_band (ordinal)
+Derogatory      : delinq_flag, pub_rec_flag
+Employment      : employment_years, short_tenure_flag (<1yr)
+Loan/vintage    : purpose_risk_tier, home_ownership, vintage_year, vintage_quarter
+Vintage audit   : 39 CONSISTENT / 4 PARTIAL / 89 SPARSE -> 32 candidates -> 15 used
+Encoding        : OrdinalEncoder (3 categoricals), fit on TRAIN only, unknown = -1
+Standardisation : StandardScaler for Logistic Regression only (trees use raw values)
+Excluded (EDA)  : grade, sub_grade, int_rate  (circular — lender's own risk pricing)
+Leakage dropped : 22 post-outcome columns
+
+3. TEMPORAL SPLIT  (by origination year — train on past, test on future)
+------------------------------------------------------------------------------
+Split        Vintages     Rows (100k dev)   Default rate
+Train        <= 2015      61,442            18.43%
+Validation   2016         21,786            23.29%
+Test (OOT)   2017–2018    16,772            21.29%
+Production retrain: 307,208 train (<=2015) ; test 83,859 (2017–2018)
+
+4. MODEL COMPARISON  (out-of-time validation vintage 2016)
+------------------------------------------------------------------------------
+Model                 Val AUC    KS       Gini     Brier
+XGBoost (CHAMPION)    0.6684     0.2472   0.3367   0.2316
+LightGBM              0.6684     0.2471   0.3369   0.2320
+Logistic Regression   0.6616     0.2362   0.3232   0.2368
+Base-rate Brier reference: 0.1786 (at 23.3% validation default rate)
+Imbalance handling: class_weight='balanced' (LR); scale_pos_weight=4.43 (boosters)
+
+5. CHAMPION HYPERPARAMETERS  (XGBoost; seeded 30-min Optuna TPE, AUC objective)
+------------------------------------------------------------------------------
+Effective size   : 230 trees, max_depth = 4  (early stopping; 2,000-tree ceiling)
+Selection basis  : parsimony (230 vs LightGBM 591 trees) + marginally better Brier
+Note             : two independent searches tied at 0.6684 -> feature-set ceiling,
+                   not a tuning limit (price of excluding grade/sub_grade/int_rate)
+random_state     : 42 (all random ops seeded)
+
+6. PRODUCTION PERFORMANCE & TEMPORAL DRIFT  (held-out 2017–2018)
+------------------------------------------------------------------------------
+Test AUC (overall)   : 0.6726     (slightly above validation)
+AUC by vintage       : 2017 = 0.6725 ; 2018 = 0.6668  (mean 0.670)
+Verdict              : stable discrimination, no temporal degradation
+
+7. DIAGNOSTIC OPERATING THRESHOLD  (dollar-weighted policy; diagnostic only)
+------------------------------------------------------------------------------
+Threshold            : 0.490  (>=75% of expected default dollars captured)
+Youden's J optimum   : 0.519
+Recall               : 69%  (3,483 of 5,073 future defaulters)
+Precision / Accuracy : 32% / 58%
+(Production IFRS 9 framework consumes CONTINUOUS calibrated PDs, not this cutoff.)
+
+8. CALIBRATION  (isotonic, fit on validation vintage)
+------------------------------------------------------------------------------
+Brier raw (class-weighted)   : 0.2254   (worse than base-rate 0.1676)
+Brier after isotonic         : 0.1576   (beats base-rate -> PDs usable in ECL)
+Rank metrics (AUC/KS/Gini)   : unchanged (isotonic is monotonic)
+Mean calibrated PD vs observed (test): 0.2205 vs 0.2129
+
+9. SHAP GLOBAL IMPORTANCE  (mean |SHAP|, 5,000 validation loans, TreeExplainer)
+------------------------------------------------------------------------------
+fico_orig 0.320 | loan_to_income 0.231 | dti 0.158 | loan_amnt 0.109 |
+home_ownership 0.092 | purpose_risk_tier 0.084 | vintage_year 0.061 |
+open_acc_band 0.041 | revol_util 0.040 | log_annual_inc 0.037 |
+employment_years 0.026 | vintage_quarter 0.017 | pub_rec_flag 0.013 |
+delinq_flag 0.004 | short_tenure_flag 0.003
+Directions consistent with credit theory (FICO/income/tenure down; leverage/DTI up)
+
+10. IFRS 9 ECL FRAMEWORK  (ECL = PD x LGD x EAD)
+------------------------------------------------------------------------------
+LGD                  : 45% (unsecured consumer)        EAD : loan amount
+SICR threshold       : calibrated PD > 0.3064 (80th pct baseline) -> Stage 2
+Stage 3              : realised default, PD = 100%
+Lifetime multiplier  : 2.5x 12-month PD (term mix 78.5% 36mo / 21.5% 60mo;
+                       blended range 2.32–2.59)
+PD–unemployment elasticity : +10% relative PD per +1pp unemployment
+Reusability gate     : stage_and_ecl() shared across all scenarios; zero-shock
+                       reproduces baseline to the cent
+
+11. BASELINE ALLOWANCE (test portfolio, 16,772 loans, $242,116,700 EAD)
+------------------------------------------------------------------------------
+Stage                    Loans     Exposure        ECL            Coverage
+Stage 1 — Performing     10,687    $135,450,375    $10,828,689    7.99%
+Stage 2 — SICR            2,514    $50,454,125     $20,708,922    41.05%
+Stage 3 — Impaired        3,571    $56,212,200     $25,295,490    45.00%
+TOTAL                    16,772    $242,116,700    $56,833,101    23.47%
+Naive flat-rate reserve  : $23.2M  (-$33.6M / -59% vs risk-sensitive allowance)
+
+12. MACRO STRESS RESULTS
+------------------------------------------------------------------------------
+Scenario            Shock     Total ECL       Coverage   Stage 2   vs baseline
+Baseline            +0.0pp    $56,833,101     23.47%     2,514     +0.0%
+Adverse (GFC)       +2.7pp    $65,636,032     27.11%     3,537     +15.5% (+$8.8M)
+Severely Adverse    +4.5pp    $73,333,368     30.29%     5,022     +29.0% (+$16.5M)
+Stage 3 fixed at 3,571 (impairment realised, not scenario-dependent)
+
+13. ARTIFACTS
+------------------------------------------------------------------------------
+champion_xgb_production.pkl  (raw model: SHAP / ranking)
+champion_xgb_calibrated.pkl  (isotonic-calibrated PDs: ECL)
+ordinal_encoder.pkl | feature_list.txt | consistent_features.json
+processed parquet splits | macro_panel.parquet
+==============================================================================
