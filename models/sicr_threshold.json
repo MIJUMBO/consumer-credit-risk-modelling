@@ -1,0 +1,5 @@
+{
+  "sicr_quantile": 0.8,
+  "sicr_threshold": 0.3063623905181885,
+  "baseline": "production_train_vintages<=2015_calibrated_pd"
+}
